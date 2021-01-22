@@ -35,10 +35,10 @@ def main(args):
         gpu_mode = args.mode == 'gpu'
         tddfa = TDDFA(gpu_mode=gpu_mode, **cfg)
         face_boxes = FaceBoxes()
-
+    print ("xxxx")
     # Given a camera
     # before run this line, make sure you have installed `imageio-ffmpeg`
-    reader = imageio.get_reader("<video0>")
+    reader = imageio.get_reader('<video0>', input_params=['-framerate', '30'])
 
     # the simple implementation of average smoothing by looking ahead by n_next frames
     # assert the frames of the video >= n
@@ -46,7 +46,6 @@ def main(args):
     n = n_pre + n_next + 1
     queue_ver = deque()
     queue_frame = deque()
-
     # run
     dense_flag = args.opt in ('2d_dense', '3d')
     pre_ver = None

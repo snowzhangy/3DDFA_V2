@@ -179,4 +179,32 @@ def cv_draw_landmark(img_ori, pts, box=None, color=GREEN, size=1):
         cv2.line(img, left_bottom, left_top, BLUE, 1, cv2.LINE_AA)
 
     return img
+
+
+def cv_draw_landmark2(img_ori, pts, box=None, color=GREEN, size=1):
+    img = img_ori.copy()
+    if not type(pts) in [tuple, list]:
+        pts = [pts]
+    print(str(pts[0,0,1])+"|")
+    for j in range(len(pts)):
+        n = pts[j].shape[1]
+        if n <= 106:
+            for i in range(n):
+                cv2.circle(img, (int(np.round(pts[j][0,0, i])), int(np.round(pts[j][0,1, i]))), size, color, -1)
+        else:
+            sep = 1
+            for i in range(0, n, sep):
+                cv2.circle(img, (int(round(pts[j][0,0, i])), int(round(pts[j][0,1, i]))), size, color, 1)
+        if box is not None:
+            left, top, right, bottom = np.round(box).astype(np.int32)
+            left_top = (left, top)
+            right_top = (right, top)
+            right_bottom = (right, bottom)
+            left_bottom = (left, bottom)
+            cv2.line(img, left_top, right_top, BLUE, 1, cv2.LINE_AA)
+            cv2.line(img, right_top, right_bottom, BLUE, 1, cv2.LINE_AA)
+            cv2.line(img, right_bottom, left_bottom, BLUE, 1, cv2.LINE_AA)
+            cv2.line(img, left_bottom, left_top, BLUE, 1, cv2.LINE_AA)
+
+    return img
     

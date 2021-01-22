@@ -13,7 +13,7 @@ from FaceBoxes import FaceBoxes
 from TDDFA import TDDFA
 from utils.render import render
 # from utils.render_ctypes import render
-from utils.functions import cv_draw_landmark, get_suffix
+from utils.functions import cv_draw_landmark2,cv_draw_landmark, get_suffix
 
 
 def main(args):
@@ -65,13 +65,13 @@ def main(args):
         if i == 0:
             # detect
             boxes = face_boxes(frame_bgr)
-            boxes = [boxes[0]]
+            #boxes = [boxes[0]]
             param_lst, roi_box_lst = tddfa(frame_bgr, boxes)
-            ver = tddfa.recon_vers(param_lst, roi_box_lst, dense_flag=dense_flag)[0]
+            ver = tddfa.recon_vers(param_lst, roi_box_lst, dense_flag=dense_flag)
 
             # refine
-            param_lst, roi_box_lst = tddfa(frame_bgr, [ver], crop_policy='landmark')
-            ver = tddfa.recon_vers(param_lst, roi_box_lst, dense_flag=dense_flag)[0]
+            param_lst, roi_box_lst = tddfa(frame_bgr, ver, crop_policy='landmark')
+            ver = tddfa.recon_vers(param_lst, roi_box_lst, dense_flag=dense_flag)
 
             # padding queue
             for _ in range(n_pre):
@@ -83,32 +83,33 @@ def main(args):
             queue_frame.append(frame_bgr.copy())
 
         else:
-            param_lst, roi_box_lst = tddfa(frame_bgr, [pre_ver], crop_policy='landmark')
+            param_lst, roi_box_lst = tddfa(frame_bgr, pre_ver, crop_policy='landmark')
 
             roi_box = roi_box_lst[0]
             # todo: add confidence threshold to judge the tracking is failed
             if abs(roi_box[2] - roi_box[0]) * abs(roi_box[3] - roi_box[1]) < 2020:
+                print("xxx")
                 boxes = face_boxes(frame_bgr)
-                boxes = [boxes[0]]
+                #boxes = [boxes[0]]
                 param_lst, roi_box_lst = tddfa(frame_bgr, boxes)
 
-            ver = tddfa.recon_vers(param_lst, roi_box_lst, dense_flag=dense_flag)[0]
+            ver = tddfa.recon_vers(param_lst, roi_box_lst, dense_flag=dense_flag)
 
             queue_ver.append(ver.copy())
             queue_frame.append(frame_bgr.copy())
-
+            
         pre_ver = ver  # for tracking
 
         # smoothing: enqueue and dequeue ops
         if len(queue_ver) >= n:
             ver_ave = np.mean(queue_ver, axis=0)
-
+            
             if args.opt == '2d_sparse':
-                img_draw = cv_draw_landmark(queue_frame[n_pre], ver_ave)  # since we use padding
+                img_draw = cv_draw_landmark2(queue_frame[n_pre], ver_ave)  # since we use padding
             elif args.opt == '2d_dense':
-                img_draw = cv_draw_landmark(queue_frame[n_pre], ver_ave, size=1)
+                img_draw = cv_draw_landmark2(queue_frame[n_pre], ver_ave, size=1)
             elif args.opt == '3d':
-                img_draw = render(queue_frame[n_pre], [ver_ave], tddfa.tri, alpha=0.7)
+                img_draw = render(queue_frame[n_pre], ver_ave, tddfa.tri, alpha=0.7)
             else:
                 raise ValueError(f'Unknown opt {args.opt}')
 
@@ -125,11 +126,11 @@ def main(args):
         ver_ave = np.mean(queue_ver, axis=0)
 
         if args.opt == '2d_sparse':
-            img_draw = cv_draw_landmark(queue_frame[n_pre], ver_ave)  # since we use padding
+            img_draw = cv_draw_landmark2(queue_frame[n_pre], ver_ave)  # since we use padding
         elif args.opt == '2d_dense':
-            img_draw = cv_draw_landmark(queue_frame[n_pre], ver_ave, size=1)
+            img_draw = cv_draw_landmark2(queue_frame[n_pre], ver_ave, size=1)
         elif args.opt == '3d':
-            img_draw = render(queue_frame[n_pre], [ver_ave], tddfa.tri, alpha=0.7)
+            img_draw = render(queue_frame[n_pre], ver_ave, tddfa.tri, alpha=0.7)
         else:
             raise ValueError(f'Unknown opt {args.opt}')
 
